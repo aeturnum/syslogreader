@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>
+        Syslog watcher
+    </title>
+</head>
+
+<body>
+    <main style="height: 500px;width: 90%;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;"
+        id="main">
+    </main>
+    <script type="application/javascript">
+        (() => {
+            class myWebsocketHandler {
+                setupSocket() {
+                    this.socket = new WebSocket("ws://localhost:4000/ws")
+
+                    this.socket.addEventListener("message", (event) => {
+                        let textBox = document.getElementById("main");
+                        textBox.appendChild(document.createTextNode(event.data));
+                        textBox.appendChild(document.createElement("br"));
+                    })
+
+                    this.socket.addEventListener("close", () => {
+                        this.setupSocket()
+                    })
+                }
+
+            }
+
+            const websocketClass = new myWebsocketHandler()
+            websocketClass.setupSocket()
+        })()
+    </script>
+</body>
+
+</html>
