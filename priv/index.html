@@ -13,27 +13,28 @@
         id="main">
     </main>
     <script type="application/javascript">
-        (() => {
-            class myWebsocketHandler {
-                setupSocket() {
-                    this.socket = new WebSocket("ws://localhost:4000/ws")
 
-                    this.socket.addEventListener("message", (event) => {
-                        let textBox = document.getElementById("main");
-                        textBox.appendChild(document.createTextNode(event.data));
-                        textBox.appendChild(document.createElement("br"));
-                    })
+        class myWebsocketHandler {
+            setupSocket() {
+                let loc = window.location;
+                this.socket = new WebSocket(`wss://${loc.hostname}/ws`)
 
-                    this.socket.addEventListener("close", () => {
-                        this.setupSocket()
-                    })
-                }
+                this.socket.addEventListener("message", (event) => {
+                    let textBox = document.getElementById("main");
+                    textBox.appendChild(document.createTextNode(event.data));
+                    textBox.appendChild(document.createElement("br"));
+                })
 
+                this.socket.addEventListener("close", () => {
+                    this.setupSocket()
+                })
             }
 
-            const websocketClass = new myWebsocketHandler()
-            websocketClass.setupSocket()
-        })()
+        }
+
+        const websocketClass = new myWebsocketHandler()
+        websocketClass.setupSocket()
+
     </script>
 </body>
 

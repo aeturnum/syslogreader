@@ -4,9 +4,7 @@ defmodule Syslogreader.REST.Websocket do
   alias Syslogreader.Monitor
 
   def init(request, _state) do
-    state = %{registry_key: request.path}
-
-    {:cowboy_websocket, request, state}
+    {:cowboy_websocket, request, []}
   end
 
   def websocket_init(state) do
