@@ -81,8 +81,9 @@ defmodule Syslogreader.Monitor do
   def do_ping(), do: listen(make_p_proc())
 
   defp make_p_proc() do
-    {:ok, exexec_pid, spawner_os_pid} =
-      Exexec.run("journalctl -f -t spins", stdout: true, stderr: :stdout)
+    Exexec.run("journalctl -f -t spins", stdout: true, stderr: :stdout)
+
+    # {:ok, exexec_pid, spawner_os_pid} = Exexec.run("ping 8.8.8.8", stdout: true, stderr: :stdout)
 
     {exexec_pid, spawner_os_pid}
   end
@@ -97,15 +98,10 @@ defmodule Syslogreader.Monitor do
 
         listen(pids)
 
-      {:stderr, ^spawner_os_pid, data} ->
-        # {^pid, :data, :err, data} ->
-        # not sure this works
-        L.e("err: #{data}")
+      {:stderr, ^spawner_os_pid, _data} ->
         listen(pids)
 
-      other ->
-        # {^pid, :result, _} ->
-        L.d("over: #{other}")
+      _other ->
         {:ok, nil}
     end
   end
