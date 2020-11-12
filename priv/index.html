@@ -22,7 +22,7 @@
                 this.socket.addEventListener("message", (event) => {
                     let textBox = document.getElementById("main");
                     textBox.appendChild(document.createTextNode(event.data));
-                    textBox.appendChild(document.createElement("br"));
+                    textBox.appendChild(document.createElement("br")).scrollIntoView(false);
                 })
 
                 this.socket.addEventListener("close", () => {

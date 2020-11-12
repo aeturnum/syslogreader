@@ -96,7 +96,7 @@ defmodule Syslogreader.Monitor do
         # {^pid, :data, :out, data} ->
         data
         |> String.split("\n", trim: true)
-        |> add_line()
+        |> Enum.each(fn line -> add_line(line) end)
 
         listen(pids)
 
