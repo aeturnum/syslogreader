@@ -21,7 +21,7 @@ defmodule Syslogreader.Monitor do
     GenServer.call(@name, :scrollback)
     |> IO.inspect(label: "backlog")
     |> Enum.each(fn line ->
-      IO.puts("Sending #{line} to #{inspect(self())}")
+      # IO.puts("Sending #{line} to #{inspect(self())}")
       notify(self(), line)
     end)
   end
@@ -36,7 +36,7 @@ defmodule Syslogreader.Monitor do
   end
 
   def handle_cast({:add, line}, {lines, task}) do
-    IO.puts("adding line: #{line}")
+    # IO.puts("adding line: #{line}")
     notify_all(line)
     {:noreply, {[line | lines] |> Enum.take(@limit), task}}
   end
@@ -57,8 +57,6 @@ defmodule Syslogreader.Monitor do
   defp notify_all(line) do
     Registry.Syslogreader
     |> Registry.dispatch(@key, fn entries ->
-      IO.inspect(entries, label: "entries")
-
       for {pid, _} <- entries do
         notify(pid, line)
       end
@@ -81,12 +79,12 @@ defmodule Syslogreader.Monitor do
   def do_ping(), do: listen(make_p_proc())
 
   defp make_p_proc() do
-    {:ok, exexec_pid, spawner_os_pid} =
-      Exexec.run("journalctl -f -q -t spins", stdout: true, stderr: :stdout)
+    with command <- "journalctl -f -q -t spins" do
+      # with command <- "ping 8.8.8.8" do
+      {:ok, exexec_pid, spawner_os_pid} = Exexec.run(command, stdout: true, stderr: :stdout)
 
-    # {:ok, exexec_pid, spawner_os_pid} = Exexec.run("ping 8.8.8.8", stdout: true, stderr: :stdout)
-
-    {exexec_pid, spawner_os_pid}
+      {exexec_pid, spawner_os_pid}
+    end
   end
 
   defp listen(pids = {_, spawner_os_pid}) do

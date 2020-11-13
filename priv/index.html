@@ -3,14 +3,19 @@
 
 <head>
     <meta charset="utf-8" />
+    <style type="text/css">
+        body {
+            background-color: #1a1a1a;
+            color: white;
+        }
+    </style>
     <title>
         Syslog watcher
     </title>
 </head>
 
 <body>
-    <main style="height: 500px;width: 90%;border:1px solid #ccc;font:16px/26px Georgia, Garamond, Serif;overflow:auto;"
-        id="main">
+    <main style="height: 500px;width: 90%;border:1px solid #ccc;font-family: monospace;overflow:auto;" id="main">
     </main>
     <script type="application/javascript">
 
@@ -18,6 +23,7 @@
             setupSocket() {
                 let loc = window.location;
                 this.socket = new WebSocket(`wss://${loc.hostname}/ws`)
+                // this.socket = new WebSocket(`ws://localhost:4000/ws`)
 
                 this.socket.addEventListener("message", (event) => {
                     let textBox = document.getElementById("main");
