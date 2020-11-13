@@ -5,7 +5,7 @@ defmodule Syslogreader.Monitor do
   @name Monitor
 
   @key :listeners
-  @limit 30
+  @limit 100
 
   def start_link([]) do
     GenServer.start_link(__MODULE__, [], name: @name)

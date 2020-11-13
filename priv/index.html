@@ -7,6 +7,15 @@
         body {
             background-color: #1a1a1a;
             color: white;
+            margin: 0;
+        }
+
+        main {
+            position: absolute;
+            top: 40px;
+            bottom: 20px;
+            width: 100%;
+            height: 100%;
         }
     </style>
     <title>
@@ -15,15 +24,14 @@
 </head>
 
 <body>
-    <main style="height: 500px;width: 90%;border:1px solid #ccc;font-family: monospace;overflow:auto;" id="main">
-    </main>
+    <main id="main"></main>
     <script type="application/javascript">
 
         class myWebsocketHandler {
             setupSocket() {
                 let loc = window.location;
                 this.socket = new WebSocket(`wss://${loc.hostname}/ws`)
-                // this.socket = new WebSocket(`ws://localhost:4000/ws`)
+                // this.socket = new WebSocket(`wss://admin.drex.space/ws`)
 
                 this.socket.addEventListener("message", (event) => {
                     let textBox = document.getElementById("main");
