@@ -40,7 +40,7 @@ defmodule Syslogreader.SysDLogLine do
             _MACHINE_ID: "",
             # number
             _UID: "",
-            # number
+            # number, microseconds
             __REALTIME_TIMESTAMP: "",
             _SYSTEMD_SLICE: "",
             __CURSOR: "",
@@ -56,7 +56,7 @@ defmodule Syslogreader.SysDLogLine do
             _COMM: "",
             _PID: "",
             _SYSTEMD_UNIT: "",
-            # number
+            # number, microseconds
             __MONOTONIC_TIMESTAMP: ""
 
   def new(line) do

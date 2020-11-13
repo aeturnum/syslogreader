@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <!-- <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
     <style type="text/css">
         body {
             background-color: #1a1a1a;
@@ -24,6 +24,10 @@
             margin: 0;
             padding: 0;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
     <title>
         Syslog watcher
@@ -31,10 +35,33 @@
 </head>
 
 <body>
-    <main id="main"></main>
+    <div>
+        <div style="display: flex">
+            <p>Hide Items: </p>
+            <select id="hide" name="hide">
+                <option value="none" selected>Nothing</option>
+                <option value="404">404</option>
+            </select>
+        </div>
+        <main id="text"></main>
+    </div>
+
     <script type="application/javascript">
+        // https://stackoverflow.com/questions/847185/convert-a-unix-timestamp-to-time-in-javascript
         function format_time(s) {
-            return new Date(s / 1e3).toISOString().slice(-13, -5);
+            const dtFormat = new Intl.DateTimeFormat("en-US", {
+                hour12: false, // needed for leading zeros :'(
+                month: "2-digit",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                second: "numeric",
+                fractionalSecondDigits: 3,
+                timeZone: "America/Los_Angeles",
+            });
+            // these are microsecond numbers
+            let d = new Date(s / 1e3);
+            return dtFormat.format(d);
         }
 
         class myWebsocketHandler {
@@ -45,17 +72,17 @@
 
                 this.socket.addEventListener("message", (event) => {
                     let payload = JSON.parse(event.data);
-                    let textBox = document.getElementById("main");
+                    let textBox = u('#text').nodes[0];
+                    let stamp = format_time(parseInt(payload["ts"]));
+
                     let scroll = false;
                     if (textBox.scrollHeight <= textBox.scrollTop + textBox.clientHeight) {
                         scroll = true;
                     }
-                    let newLine = document.createElement("p");
-                    let stamp = format_time(parseInt(payload["ts"]));
-                    newLine.innerHTML = `${stamp} ${payload["line"]}`;
-                    let child = textBox.appendChild(newLine);
+
+                    u('#text').append(`<p>${stamp} ${payload["line"]}</p>`)
                     if (scroll) {
-                        child.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                        u('#text > p').last().scroll()
                     }
 
                 })
@@ -67,9 +94,21 @@
 
         }
 
+        function hideItems(event) {
+            let value = event.target.value;
+            if (value === "none") {
+                u("#text > p").removeClass("hidden");
+            } else if (value === "404") {
+                u("#text > p")
+                    .filter((node) => node.innerHTML.includes("404"))
+                    .addClass("hidden");
+            }
+        }
+
         const websocketClass = new myWebsocketHandler()
         websocketClass.setupSocket()
 
+        u('#hide').on('change', hideItems)        
     </script>
 </body>
 
