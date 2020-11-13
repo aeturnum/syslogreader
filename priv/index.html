@@ -34,7 +34,7 @@
     <main id="main"></main>
     <script type="application/javascript">
         function format_time(s) {
-            return new Date(s * 1e3).toISOString().slice(-13, -5);
+            return new Date(s / 1e3).toISOString().slice(-13, -5);
         }
 
         class myWebsocketHandler {
@@ -51,7 +51,8 @@
                         scroll = true;
                     }
                     let newLine = document.createElement("p");
-                    newLine.innerHTML = `${format_time(payload["ts"])} ${payload["line"]}`;
+                    let stamp = format_time(parseInt(payload["ts"]));
+                    newLine.innerHTML = `${stamp} ${payload["line"]}`;
                     let child = textBox.appendChild(newLine);
                     if (scroll) {
                         child.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });

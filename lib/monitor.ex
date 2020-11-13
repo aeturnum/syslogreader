@@ -39,7 +39,6 @@ defmodule Syslogreader.Monitor do
   def handle_cast({:add, line}, {lines, task}) do
     # IO.puts("adding line: #{line}")
     with line <- SysDLogLine.new(line) do
-      IO.inspect(line)
       notify_all(line)
       {:noreply, {[line | lines] |> Enum.take(@limit), task}}
     end
@@ -62,7 +61,7 @@ defmodule Syslogreader.Monitor do
     Registry.Syslogreader
     |> Registry.dispatch(@key, fn entries ->
       for {pid, _} <- entries do
-        notify(pid, SysDLogLine.payload(line))
+        notify(pid, line)
       end
     end)
 
@@ -70,7 +69,7 @@ defmodule Syslogreader.Monitor do
   end
 
   defp notify(pid, line) do
-    Process.send(pid, line, [])
+    Process.send(pid, SysDLogLine.payload(line) |> IO.inspect(label: "notify"), [])
   end
 
   # task section where we monitor the command line
@@ -80,7 +79,7 @@ defmodule Syslogreader.Monitor do
     end)
   end
 
-  def do_ping(), do: listen(make_p_proc())
+  def do_ping(), do: listen(make_p_proc(), nil)
 
   defp make_p_proc() do
     # make is json
@@ -91,19 +90,40 @@ defmodule Syslogreader.Monitor do
     end
   end
 
-  defp listen(pids = {_, spawner_os_pid}) do
+  defp listen(pids = {_, spawner_os_pid}, old_orphan) do
     # todo: re-write this to be simpler and just re-send messages to ourselves
     receive do
       {:stdout, ^spawner_os_pid, data} ->
         # {^pid, :data, :out, data} ->
-        data
-        |> String.split("\n", trim: true)
-        |> Enum.each(fn line -> add_line(line) end)
+        new_orphan =
+          data
+          |> String.split("\n", trim: true)
+          |> Enum.reduce(
+            old_orphan,
+            fn line, orphan ->
+              if String.contains?(line, "{") and String.contains?(line, "}") do
+                add_line(line)
+                # kick can down road
+                orphan
+              else
+                case orphan do
+                  nil ->
+                    # new orphan
+                    line
 
-        listen(pids)
+                  partial ->
+                    # consume orphan
+                    add_line(partial <> line)
+                    nil
+                end
+              end
+            end
+          )
+
+        listen(pids, new_orphan)
 
       {:stderr, ^spawner_os_pid, _data} ->
-        listen(pids)
+        listen(pids, old_orphan)
 
       _other ->
         {:ok, nil}
