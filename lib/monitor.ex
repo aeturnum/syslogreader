@@ -1,5 +1,6 @@
 defmodule Syslogreader.Monitor do
   use GenServer
+  alias Syslogreader.SysDLogLine
 
   # Callbacks
   @name Monitor
@@ -37,8 +38,11 @@ defmodule Syslogreader.Monitor do
 
   def handle_cast({:add, line}, {lines, task}) do
     # IO.puts("adding line: #{line}")
-    notify_all(line)
-    {:noreply, {[line | lines] |> Enum.take(@limit), task}}
+    with line <- SysDLogLine.new(line) do
+      IO.inspect(line)
+      notify_all(line)
+      {:noreply, {[line | lines] |> Enum.take(@limit), task}}
+    end
   end
 
   def handle_cast(other, state) do
@@ -58,7 +62,7 @@ defmodule Syslogreader.Monitor do
     Registry.Syslogreader
     |> Registry.dispatch(@key, fn entries ->
       for {pid, _} <- entries do
-        notify(pid, line)
+        notify(pid, SysDLogLine.payload(line))
       end
     end)
 
@@ -79,8 +83,8 @@ defmodule Syslogreader.Monitor do
   def do_ping(), do: listen(make_p_proc())
 
   defp make_p_proc() do
-    with command <- "journalctl -f -q -t spins" do
-      # with command <- "ping 8.8.8.8" do
+    # make is json
+    with command <- "journalctl -f -q -o json -t spins" do
       {:ok, exexec_pid, spawner_os_pid} = Exexec.run(command, stdout: true, stderr: :stdout)
 
       {exexec_pid, spawner_os_pid}

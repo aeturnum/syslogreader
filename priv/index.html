@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
+    <!-- <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script> -->
     <style type="text/css">
         body {
             background-color: #1a1a1a;
@@ -32,21 +33,25 @@
 <body>
     <main id="main"></main>
     <script type="application/javascript">
+        function format_time(s) {
+            return new Date(s * 1e3).toISOString().slice(-13, -5);
+        }
 
         class myWebsocketHandler {
             setupSocket() {
                 let loc = window.location;
-                this.socket = new WebSocket(`wss://${loc.hostname}/ws`)
-                // this.socket = new WebSocket(`wss://admin.drex.space/ws`)
+                // this.socket = new WebSocket(`wss://${loc.hostname}/ws`)
+                this.socket = new WebSocket(`wss://admin.drex.space/ws`)
 
                 this.socket.addEventListener("message", (event) => {
+                    let payload = JSON.parse(event.data);
                     let textBox = document.getElementById("main");
                     let scroll = false;
                     if (textBox.scrollHeight <= textBox.scrollTop + textBox.clientHeight) {
                         scroll = true;
                     }
                     let newLine = document.createElement("p");
-                    newLine.innerHTML = event.data;
+                    newLine.innerHTML = `${format_time(payload["ts"])} ${payload["line"]}`;
                     let child = textBox.appendChild(newLine);
                     if (scroll) {
                         child.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
