@@ -15,7 +15,13 @@
             top: 40px;
             bottom: 20px;
             width: 100%;
-            height: 100%;
+            height: 99%;
+            overflow: auto;
+        }
+
+        p {
+            margin: 0;
+            padding: 0;
         }
     </style>
     <title>
@@ -35,8 +41,17 @@
 
                 this.socket.addEventListener("message", (event) => {
                     let textBox = document.getElementById("main");
-                    textBox.appendChild(document.createTextNode(event.data));
-                    textBox.appendChild(document.createElement("br")).scrollIntoView(false);
+                    let scroll = false;
+                    if (textBox.scrollHeight <= textBox.scrollTop + textBox.clientHeight) {
+                        scroll = true;
+                    }
+                    let newLine = document.createElement("p");
+                    newLine.innerHTML = event.data;
+                    let child = textBox.appendChild(newLine);
+                    if (scroll) {
+                        child.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                    }
+
                 })
 
                 this.socket.addEventListener("close", () => {
