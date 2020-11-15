@@ -21,7 +21,7 @@
             overflow: auto;
         }
 
-        p {
+        pre {
             margin: 0;
             padding: 0;
         }
@@ -81,7 +81,7 @@
                         scroll = true;
                     }
 
-                    u('#text').append(`<p>${stamp} ${payload["line"]}</p>`)
+                    u('#text').append(`<pre>${stamp} ${payload["line"]}</pre>`)
                     if (scroll) {
                         u('#text > p').last().scroll()
                     }
