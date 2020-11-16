@@ -69,7 +69,7 @@ defmodule Syslogreader.Monitor do
   end
 
   defp notify(pid, line) do
-    Process.send(pid, SysDLogLine.payload(line) |> IO.inspect(label: "notify"), [])
+    Process.send(pid, SysDLogLine.payload(line), [])
   end
 
   # task section where we monitor the command line
@@ -90,43 +90,57 @@ defmodule Syslogreader.Monitor do
     end
   end
 
-  defp listen(pids = {_, spawner_os_pid}, old_orphan) do
+  defp listen(pids = {_, spawner_os_pid}, partial) do
     # todo: re-write this to be simpler and just re-send messages to ourselves
     receive do
       {:stdout, ^spawner_os_pid, data} ->
         # {^pid, :data, :out, data} ->
-        new_orphan =
+        new_partial =
           data
           |> String.split("\n", trim: true)
           |> Enum.reduce(
-            old_orphan,
-            fn line, orphan ->
-              if String.contains?(line, "{") and String.contains?(line, "}") do
+            partial,
+            fn line, part ->
+              if full_log(line) do
                 add_line(line)
                 # kick can down road
-                orphan
+                part
               else
-                case orphan do
+                case part do
                   nil ->
-                    # new orphan
+                    # new start of a partial
+                    IO.puts("Started partial line: #{inspect(line)}")
                     line
 
-                  partial ->
+                  _ ->
                     # consume orphan
-                    add_line(partial <> line)
+                    with new_partial <- partial <> line do
+                      if full_log(new_partial) do
+                        # complete, add it
+                        add_line(new_partial)
+                        nil
+                      else
+                        # keep going, we need an ending paren
+                        IO.puts("Extended partial line: #{inspect(new_partial)}")
+                        new_partial
+                      end
+                    end
+
                     nil
                 end
               end
             end
           )
 
-        listen(pids, new_orphan)
+        listen(pids, new_partial)
 
       {:stderr, ^spawner_os_pid, _data} ->
-        listen(pids, old_orphan)
+        listen(pids, partial)
 
       _other ->
         {:ok, nil}
     end
   end
+
+  defp full_log(line), do: String.starts_with?(line, "{") and String.ends_with?(line, "}")
 end
