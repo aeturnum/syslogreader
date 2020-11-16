@@ -3,6 +3,8 @@
 
 <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/vnd.microsoft.icon" href="favicon.ico" />
+    <!-- ico supposedly CC no attrib: https://www.favicon.cc/?action=icon&file_id=865415 -->
     <script src="https://cdn.jsdelivr.net/npm/umbrellajs"></script>
     <style type="text/css">
         body {
@@ -83,7 +85,7 @@
 
                     u('#text').append(`<pre>${stamp} ${payload["line"]}</pre>`)
                     if (scroll) {
-                        u('#text > p').last().scroll()
+                        u('#text > pre').last().scroll()
                     }
 
                 })
@@ -98,10 +100,10 @@
         function hideItems(event) {
             let value = event.target.value;
             if (value === "none") {
-                u("#text > p").removeClass("hidden");
+                u("#text > pre").removeClass("hidden");
             } else if (value === "404") {
-                u("#text > p")
-                    .filter((node) => node.innerHTML.includes("404"))
+                u("#text > pre")
+                    .filter((node) => node.innerHTML.includes("404]"))
                     .addClass("hidden");
             }
         }
