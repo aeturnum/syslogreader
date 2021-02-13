@@ -6,7 +6,7 @@ defmodule Syslogreader.Monitor do
   @name Monitor
 
   @key :listeners
-  @limit 100
+  @backlog_size 300
 
   def start_link([]) do
     GenServer.start_link(__MODULE__, [], name: @name)
@@ -16,11 +16,11 @@ defmodule Syslogreader.Monitor do
     GenServer.cast(@name, {:add, line})
   end
 
-  def get_backlog() do
-    IO.puts("get_backlog")
+  def get_backlog(id) do
+    IO.puts("Sending Backlog to #{id}(#{inspect(self())})")
 
     GenServer.call(@name, :scrollback)
-    |> IO.inspect(label: "backlog")
+    # |> IO.inspect(label: "backlog")
     |> Enum.each(fn line ->
       # IO.puts("Sending #{line} to #{inspect(self())}")
       notify(self(), line)
@@ -28,8 +28,18 @@ defmodule Syslogreader.Monitor do
   end
 
   def register() do
-    Registry.Syslogreader
-    |> Registry.register(@key, {})
+    with {:ok, _} <- Registry.register(Registry.Syslogreader, @key, {}),
+         count <- Registry.count(Registry.Syslogreader) do
+      # IO.puts("Registering new listener. Now at #{count} listeners!")
+      count
+    end
+  end
+
+  def unregister(id) do
+    with :ok <- Registry.unregister(Registry.Syslogreader, @key),
+         count <- Registry.count(Registry.Syslogreader) do
+      # IO.puts("Un-Registering #{id}. Now at #{count} listeners!")
+    end
   end
 
   def init(_) do
@@ -40,12 +50,12 @@ defmodule Syslogreader.Monitor do
     # IO.puts("adding line: #{line}")
     with line <- SysDLogLine.new(line) do
       notify_all(line)
-      {:noreply, {[line | lines] |> Enum.take(@limit), task}}
+      {:noreply, {[line | lines] |> Enum.take(@backlog_size), task}}
     end
   end
 
   def handle_cast(other, state) do
-    IO.puts("unexpected cast: #{inspect(other)}")
+    # IO.puts("unexpected cast: #{inspect(other)}")
     {:noreply, state}
   end
 
@@ -83,7 +93,9 @@ defmodule Syslogreader.Monitor do
 
   defp make_p_proc() do
     # make is json
-    with command <- "journalctl -f -q -o json -t spins" do
+    # journalctl -q -n 5000 -t spins
+    with program <- Application.get_env(:syslogreader, :program),
+         command <- "journalctl -f -q -n 100 -o json -t #{program}" do
       {:ok, exexec_pid, spawner_os_pid} = Exexec.run(command, stdout: true, stderr: :stdout)
 
       {exexec_pid, spawner_os_pid}

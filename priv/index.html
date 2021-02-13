@@ -88,11 +88,13 @@
                         u('#text > pre').last().scroll()
                     }
 
-                })
+                });
 
                 this.socket.addEventListener("close", () => {
-                    this.setupSocket()
-                })
+                    console.log("Websocket was closed! :'(");
+                });
+
+                this.pinger = setInterval(() => this.socket.send(""), 10000)
             }
 
         }

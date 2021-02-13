@@ -27,3 +27,6 @@ syslogreader-*.tar
 
 # OS X
 .DS_Store
+
+# don't include my push script
+push.sh

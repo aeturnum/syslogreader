@@ -4,20 +4,30 @@ defmodule Syslogreader.REST.Websocket do
   alias Syslogreader.Monitor
 
   def init(request, _state) do
-    {:cowboy_websocket, request, []}
+    {:cowboy_websocket, request, [], %{idle_timeout: 30000}}
   end
 
-  def websocket_init(state) do
-    Monitor.register()
-    Monitor.get_backlog()
-    {:ok, state}
+  def websocket_init(_) do
+    id = Monitor.register()
+    IO.puts("Starting new websocket: #{id} -> #{inspect(self())}")
+    Monitor.get_backlog(id)
+    {:ok, id}
   end
 
-  def websocket_handle(_, state) do
-    {:ok, state}
+  def websocket_handle(_msg, id) do
+    # IO.puts("Websocket #{id}(#{inspect(self())}): got message #{inspect(msg)}")
+    {:ok, id}
   end
 
-  def websocket_info(info, state) do
-    {:reply, {:text, info}, state}
+  def websocket_info(info, id) do
+    {:reply, {:text, info}, id}
+  end
+
+  def terminate(reason, _, id) do
+    IO.puts("Websocket #{id}(#{inspect(self())}) closing: #{inspect(reason)}")
+    # stop getting messages
+    Monitor.unregister(id)
+    # must return this
+    :ok
   end
 end
